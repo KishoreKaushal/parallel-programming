@@ -13,9 +13,36 @@
 
 using namespace std;
 
+pid_t pid[TOTAL_PROC];
+
+void handle_signal(int sig){
+    switch(sig){
+        case SIGUSR1: 
+                break;
+        case SIGUSR2:
+                break;
+        case SIGTERM:
+                cout<<"God recieved race termination request."<<endl;
+                cout<<"Unlinking all the fifo's"<<endl;
+
+                kill(pid[REPORTER], SIGTERM);
+
+                unlink();   /*Defined in udef.hpp*/
+                exit(0);
+                break;
+        default: break;
+    }
+    signal(SIGUSR1, handle_signal);
+    signal(SIGUSR2, handle_signal);
+    signal(SIGTERM, handle_signal);
+}
+
+
 int main(int argc, char *argv[]){
+    signal(SIGTERM, handle_signal);
+
     mkfifo();   /*Defined in udef.hpp*/
-    pid_t pid[TOTAL_PROC];
+    
     
     pid[0] = getpid();
     for (int i=1; i<TOTAL_PROC; ++i){
@@ -52,8 +79,17 @@ int main(int argc, char *argv[]){
         
         /*signal hare and turtle to start the race*/
         kill(pid[HARE], SIGUSR1);
-        kill(pid[TURTLE], SIGUSR2);
+        kill(pid[TURTLE], SIGUSR1);
 
+        /*send pids of hare and turtle to reporter*/
+        int hare2reporter_fd = open(hare2reporter, O_WRONLY);
+        write(hare2reporter_fd, &pid[HARE], sizeof(pid_t));
+        close(hare2reporter_fd);
+        int turtle2reporter_fd = open(turtle2reporter, O_WRONLY);
+        write(turtle2reporter_fd, &pid[TURTLE], sizeof(pid_t));
+        close(turtle2reporter_fd);
+
+        /**/
         int hare_pos = 0;
         int turtle_pos = 0;
     }

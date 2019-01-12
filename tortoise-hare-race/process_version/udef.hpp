@@ -15,6 +15,9 @@ using namespace std;
 
 #define FINAL_POS (100)
 
+#define HSTEP (3)
+#define TSTEP (1)
+
 char program[][30] = {"./god.out", "./hare.out", "./turtle.out", "./reporter.out"};
 
 const char hare2turtle[] = "/tmp/hare2turtle";
@@ -56,7 +59,7 @@ struct proc {
     char name;
     int pos;
     int t;
-    proc(char _name, int _pos, int _t){
+    proc(char _name='R', int _pos=0, int _t=0){
         name = _name;
         pos = _pos;
         t = _t;

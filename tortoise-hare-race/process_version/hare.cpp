@@ -13,15 +13,14 @@
 
 using namespace std;
 
-#define STEP (3) 
 
 void handle_signal(int sig){
     switch(sig){
         case SIGUSR1:   /*used by god to signal the start the race*/
                 cout<<"Hare recieved signal from god to run."<<endl; 
                 break;
-        case SIGUSR2: 
-                cout<<"Hare stopped running.";
+        case SIGUSR2:   /*used by reporter*/
+                // cout<<"Continuing Hare.";
                 break;
         case SIGTERM:
                 cout<<"Hare recieved race termination request."<<endl;
@@ -37,6 +36,9 @@ void handle_signal(int sig){
 int main(int argc, char *argv[]){
     cout<<"Hare is here with pid: "<<getpid()<<" parent id: "<<getppid()<<endl;
     sleep(1);
+    signal(SIGUSR1, handle_signal);
+    signal(SIGUSR2, handle_signal);
+    signal(SIGTERM, handle_signal);
     
     pid_t mypid=getpid();
     pid_t tpid;
@@ -64,9 +66,24 @@ int main(int argc, char *argv[]){
     /*pause for the God signal to start the race.*/
     pause();
 
-    while (true){
-        
-    }
+    while (true && my.pos < 100){
+        /*take a step*/
+        my.pos += HSTEP;
+        my.t += 1;
 
+
+        /*recieve signal from reporter to write the info to reporter pipe and proceed one time step*/
+        pause();
+
+        /*write to the reporter pipe*/
+        hare2reporter_fd = open(hare2reporter, O_WRONLY);
+        ret = write(hare2reporter_fd, &my, sizeof(proc));
+        close(hare2reporter_fd);
+
+        /**/
+
+    }
+    kill(tpid, SIGTERM);
+    kill(getppid(), SIGTERM);
     return 0;
 }

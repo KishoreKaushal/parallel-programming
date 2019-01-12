@@ -13,15 +13,14 @@
 
 using namespace std;
 
-#define STEP (1)
 
 void handle_signal(int sig){
     switch(sig){
         case SIGUSR1:   /*used by god to signal the start the race*/
                 cout<<"Turtle recieved signal from god to run."<<endl; 
                 break;
-        case SIGUSR2: 
-                cout<<"Turtle stopped running.";
+        case SIGUSR2:   /*used by reporter*/
+                // cout<<"Continuing Turtle.";
                 break;
         case SIGTERM:
                 cout<<"Turtle recieved race termination request."<<endl;
@@ -37,6 +36,9 @@ void handle_signal(int sig){
 int main(int argc, char *argv[]){
     cout<<"Turtle is here with pid: "<<getpid()<<" parent id: "<<getppid()<<endl;
     sleep(1);
+    signal(SIGUSR1, handle_signal);
+    signal(SIGUSR2, handle_signal);
+    signal(SIGTERM, handle_signal);
 
     pid_t mypid = getpid();
     pid_t hpid;
@@ -64,8 +66,22 @@ int main(int argc, char *argv[]){
     /*pause for the God signal to start the race.*/
     pause();
 
+    while (true && my.pos < 100) {
+        /*take a step*/
+        my.pos += TSTEP;
+        my.t += 1;
 
+        pause();    /*recieve signal from reporter*/
 
+        /*write to reporter*/
+        turtle2reporter_fd = open(turtle2reporter, O_WRONLY);
+        ret = write(turtle2reporter_fd, &my, sizeof(proc));
+        close(turtle2reporter_fd);
+    }
+
+    
+    kill(hpid, SIGTERM);
+    kill(getppid(), SIGTERM);
 
     return 0;
 }

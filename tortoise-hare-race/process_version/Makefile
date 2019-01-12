@@ -8,4 +8,13 @@ turtle.out: udef.hpp turtle.cpp
 reporter.out: udef.hpp reporter.cpp 
 	g++ -Wall reporter.cpp -o reporter.out
 clean:
-	rm *.out
+	rm -f *.out
+	rm -f /tmp/hare2turtle 
+	rm -f /tmp/turtle2hare
+	rm -f /tmp/hare2reporter
+	rm -f /tmp/turtle2reporter
+	rm -f /tmp/god2hare
+	rm -f /tmp/god2turtle
+	rm -f /tmp/hare2god
+	rm -f /tmp/turtle2god
+
