@@ -35,6 +35,7 @@ void handle_signal(int sig){
 }
 
 int main(int argc, char *argv[]){
-
+    cout<<"Hare is here with pid: "<<getpid()<<endl;
+    sleep(5);
     return 0;
 }

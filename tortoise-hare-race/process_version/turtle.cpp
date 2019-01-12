@@ -34,8 +34,8 @@ void handle_signal(int sig){
     signal(SIGTERM, handle_signal);
 }
 
-
 int main(int argc, char *argv[]){
-
+    cout<<"Turtle is here with pid: "<<getpid()<<endl;
+    sleep(5);
     return 0;
 }

@@ -14,6 +14,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]){
-
+    cout<<"Reporter is here with pid: "<<getpid()<<endl;
+    sleep(5);
     return 0;
 }
