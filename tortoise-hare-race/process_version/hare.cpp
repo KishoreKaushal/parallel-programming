@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
     /*pause for the God signal to start the race.*/
     pause();
 
-    while (true && my.pos < 100){
+    while (true && my.pos < FINAL_POS){
         /*take a step*/
         my.pos += HSTEP;
         my.t += 1;
@@ -80,10 +80,6 @@ int main(int argc, char *argv[]){
         ret = write(hare2reporter_fd, &my, sizeof(proc));
         close(hare2reporter_fd);
 
-        /**/
-
     }
-    kill(tpid, SIGTERM);
-    kill(getppid(), SIGTERM);
     return 0;
 }

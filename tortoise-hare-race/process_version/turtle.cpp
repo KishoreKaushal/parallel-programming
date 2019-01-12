@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
     /*pause for the God signal to start the race.*/
     pause();
 
-    while (true && my.pos < 100) {
+    while (true && my.pos < FINAL_POS) {
         /*take a step*/
         my.pos += TSTEP;
         my.t += 1;
@@ -78,10 +78,6 @@ int main(int argc, char *argv[]){
         ret = write(turtle2reporter_fd, &my, sizeof(proc));
         close(turtle2reporter_fd);
     }
-
-    
-    kill(hpid, SIGTERM);
-    kill(getppid(), SIGTERM);
 
     return 0;
 }
