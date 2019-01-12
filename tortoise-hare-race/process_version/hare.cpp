@@ -1,8 +1,8 @@
-#include<iostream>
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<signal.h>
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
 #include <fcntl.h> 
 #include <sys/stat.h> 
 #include <sys/types.h>
@@ -17,8 +17,8 @@ using namespace std;
 
 void handle_signal(int sig){
     switch(sig){
-        case SIGUSR1:
-                cout<<"Hare recieved Signal from reporter to run."<<endl; 
+        case SIGUSR1:   /*used by god to signal the start the race*/
+                cout<<"Hare recieved signal from god to run."<<endl; 
                 break;
         case SIGUSR2: 
                 cout<<"Hare stopped running.";
@@ -35,7 +35,38 @@ void handle_signal(int sig){
 }
 
 int main(int argc, char *argv[]){
-    cout<<"Hare is here with pid: "<<getpid()<<endl;
-    sleep(5);
+    cout<<"Hare is here with pid: "<<getpid()<<" parent id: "<<getppid()<<endl;
+    sleep(1);
+    
+    pid_t mypid=getpid();
+    pid_t tpid;
+    int turtle2hare_fd, hare2turtle_fd, hare2god_fd, hare2reporter_fd;
+    int ret;
+    proc my('H', 0, 0);
+
+    /*send mypid to turtle*/
+    hare2turtle_fd = open(hare2turtle, O_WRONLY);
+    ret = write(hare2turtle_fd, &mypid, sizeof(int));
+    close(hare2turtle_fd);
+
+    /*read turtle pid from the pipe*/
+    turtle2hare_fd = open(turtle2hare, O_RDONLY);
+    ret = read(turtle2hare_fd, &tpid, sizeof(int));
+    close(turtle2hare_fd);
+    cout<<"Turtle PID read by hare: "<< tpid <<endl;
+
+    /*writing to god's pipe*/
+    hare2god_fd = open(hare2god, O_WRONLY);
+    ret = write(hare2god_fd, &mypid, sizeof(int));
+    close(hare2god_fd);
+    
+
+    /*pause for the God signal to start the race.*/
+    pause();
+
+    while (true){
+        
+    }
+
     return 0;
 }

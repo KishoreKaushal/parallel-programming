@@ -1,8 +1,8 @@
-#include<iostream>
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<signal.h>
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
 #include <fcntl.h> 
 #include <sys/stat.h> 
 #include <sys/types.h>
@@ -30,7 +30,39 @@ int main(int argc, char *argv[]){
         }
     }
 
-    sleep(10);
+    /*------------------The God program goes here--------------------*/
+    
+    int hare2god_fd, turtle2god_fd;
+    int ret, rcvh, rcvt;
+
+    /*read pipe signal from hare*/
+    hare2god_fd = open(hare2god, O_RDONLY);
+    ret = read(hare2god_fd, &rcvh, sizeof(int));
+    close(hare2god_fd);
+    
+    /*read pipe signal from turtle*/
+    turtle2god_fd = open(turtle2god, O_RDONLY);
+    ret = read(turtle2god_fd, &rcvt, sizeof(int));
+    close(turtle2god_fd);
+    
+    if (rcvh != (int)pid[HARE] || rcvt != (int)pid[TURTLE]){
+        cout << "Problem while synchronizing the processes." << endl;
+    } else {
+        cout << "First phase of sync. is working correctly." << endl;
+        
+        /*signal hare and turtle to start the race*/
+        kill(pid[HARE], SIGUSR1);
+        kill(pid[TURTLE], SIGUSR2);
+
+        int hare_pos = 0;
+        int turtle_pos = 0;
+    }
+
+
+
+    /*---------------------------------------------------------------*/
+
+    sleep(2);
     for (int i=1; i<TOTAL_PROC; ++i){
         waitpid(pid[i], NULL, 0);
     }
