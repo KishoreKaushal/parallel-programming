@@ -15,11 +15,31 @@ using namespace std;
 
 pid_t pid[TOTAL_PROC];
 
+void reposition(int entity){
+    string s = entity==HARE?"hare":"turtle";
+    int fd;
+    if(entity == HARE){
+        fd = open(god2hare, O_WRONLY);
+    } else {
+        fd = open(god2turtle, O_WRONLY);
+    }
+
+    cout<<"To reposition "<<s<<" enter a value between 0 and "<<FINAL_POS
+        <<" or -1 to cancel reposition: "<<endl;
+    int pos=-1;
+    cin>>pos;
+
+    write(fd, &pos, sizeof(int));
+    close(fd);
+}
+
 void handle_signal(int sig){
     switch(sig){
-        case SIGUSR1: 
+        case SIGUSR1: /*to handle hare reposition input */
+                reposition(HARE);
                 break;
-        case SIGUSR2:
+        case SIGUSR2: /* to handle turtle reposition input */
+                reposition(TURTLE);
                 break;
         case SIGTERM:
                 cout<<"God recieved race termination request."<<endl;
@@ -39,6 +59,8 @@ void handle_signal(int sig){
 
 
 int main(int argc, char *argv[]){
+    signal(SIGUSR1, handle_signal);
+    signal(SIGUSR2, handle_signal);
     signal(SIGTERM, handle_signal);
 
     mkfifo();   /*Defined in udef.hpp*/
@@ -92,6 +114,12 @@ int main(int argc, char *argv[]){
         /**/
         int hare_pos = 0;
         int turtle_pos = 0;
+        int t=0;
+        
+        while (true) {
+            pause();
+        }
+
     }
 
 

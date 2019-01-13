@@ -19,8 +19,7 @@ void handle_signal(int sig){
         case SIGUSR1:   /*used by god to signal the start the race*/
                 cout<<"Turtle recieved signal from god to run."<<endl; 
                 break;
-        case SIGUSR2:   /*used by reporter*/
-                // cout<<"Continuing Turtle.";
+        case SIGUSR2:   /*used by reporter and god*/
                 break;
         case SIGTERM:
                 cout<<"Turtle recieved race termination request."<<endl;
@@ -42,7 +41,7 @@ int main(int argc, char *argv[]){
 
     pid_t mypid = getpid();
     pid_t hpid;
-    int turtle2hare_fd, hare2turtle_fd, turtle2god_fd, turtle2reporter_fd;
+    int turtle2hare_fd, hare2turtle_fd, turtle2god_fd, turtle2reporter_fd, god2turtle_fd;
     int ret;
     proc my('T', 0, 0);
     
@@ -74,6 +73,23 @@ int main(int argc, char *argv[]){
         pause();    /*recieve signal from reporter*/
 
         /*write to reporter*/
+        turtle2reporter_fd = open(turtle2reporter, O_WRONLY);
+        ret = write(turtle2reporter_fd, &my, sizeof(proc));
+        close(turtle2reporter_fd);
+
+        /*for reposition by god*/
+        pause();
+        kill(getppid(), SIGUSR2);
+        god2turtle_fd = open(god2turtle, O_RDONLY);
+        read(god2turtle_fd, &ret, sizeof(int));
+        close(god2turtle_fd);
+
+        if (ret >= 0){
+            my.pos = ret;
+            cout<<"Turtle repositioned at "<<my.pos<<endl;
+        }
+
+        /*turtle will signal reporter*/
         turtle2reporter_fd = open(turtle2reporter, O_WRONLY);
         ret = write(turtle2reporter_fd, &my, sizeof(proc));
         close(turtle2reporter_fd);

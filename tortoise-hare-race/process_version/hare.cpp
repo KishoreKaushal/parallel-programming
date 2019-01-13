@@ -19,8 +19,7 @@ void handle_signal(int sig){
         case SIGUSR1:   /*used by god to signal the start the race*/
                 cout<<"Hare recieved signal from god to run."<<endl; 
                 break;
-        case SIGUSR2:   /*used by reporter*/
-                // cout<<"Continuing Hare.";
+        case SIGUSR2:   /*used by reporter and god*/
                 break;
         case SIGTERM:
                 cout<<"Hare recieved race termination request."<<endl;
@@ -42,7 +41,7 @@ int main(int argc, char *argv[]){
     
     pid_t mypid=getpid();
     pid_t tpid;
-    int turtle2hare_fd, hare2turtle_fd, hare2god_fd, hare2reporter_fd;
+    int turtle2hare_fd, hare2turtle_fd, hare2god_fd, hare2reporter_fd, god2hare_fd;
     int ret;
     proc my('H', 0, 0);
 
@@ -80,6 +79,18 @@ int main(int argc, char *argv[]){
         ret = write(hare2reporter_fd, &my, sizeof(proc));
         close(hare2reporter_fd);
 
+        /*for reposition by god*/
+        kill(getppid(), SIGUSR1);
+        god2hare_fd = open(god2hare, O_RDONLY);
+        read(god2hare_fd, &ret, sizeof(int));
+        close(god2hare_fd);
+
+        if (ret >= 0){
+            my.pos = ret;
+            cout<<"Hare repositioned at "<<my.pos<<endl;
+        }
+        
+        kill(tpid, SIGUSR2);    /*send a signal to turtle to continue*/
     }
     return 0;
 }

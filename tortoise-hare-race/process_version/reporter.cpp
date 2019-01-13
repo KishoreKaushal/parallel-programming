@@ -13,15 +13,36 @@
 
 using namespace std;
 
+bool exit_stat = false;
+
+void handle_signal(int sig){
+    switch(sig){
+        case SIGUSR1:   /*for god usage*/ 
+                break;
+        case SIGUSR2: 
+                break;
+        case SIGTERM:   
+                if (exit_stat) exit(0);
+                exit_stat = true;
+                kill(getppid(), SIGTERM);
+                break;
+        default: break;
+    }
+    signal(SIGUSR1, handle_signal);
+    signal(SIGUSR2, handle_signal);
+    signal(SIGTERM, handle_signal);
+}
 
 void print_current_status(const proc &hare, const proc &turtle){
-    // if (hare.t == turtle.t){
         cout << "t = "<<hare.t<<",\thpos = "<<hare.pos<<",\ttpos = "<<turtle.pos<<endl;
-    // }
 }
 
 
 int main(int argc, char *argv[]){
+    signal(SIGUSR1, handle_signal);
+    signal(SIGUSR2, handle_signal);
+    signal(SIGTERM, handle_signal);
+
     cout<<"Reporter is here with pid: "<<getpid()<<" parent id: "<<getppid()<<endl;
     sleep(1);
     
@@ -69,10 +90,16 @@ int main(int argc, char *argv[]){
             cout<<"Match Draw."<<endl;
             break;
         }
+
+        /*turtle will signal here to continue*/
+        turtle2reporter_fd = open(turtle2reporter, O_RDONLY);
+        ret = read(turtle2reporter_fd, &turtle, sizeof(proc));
+        close(turtle2reporter_fd);
     }
 
     kill(hpid, SIGTERM);
     kill(tpid, SIGTERM);
+    kill(getppid(), SIGTERM);
 
     return 0;
 }
