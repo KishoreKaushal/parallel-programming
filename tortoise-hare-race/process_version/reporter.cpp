@@ -114,7 +114,7 @@ int main(int argc, char *argv[]){
         } else if (hare.pos < FINAL_POS && turtle.pos >= FINAL_POS) {
             cout<<"Turtle wins the race."<<endl;
             break;
-        } else if (hare.pos == FINAL_POS && turtle.pos == FINAL_POS) {
+        } else if (hare.pos >= FINAL_POS && turtle.pos >= FINAL_POS) {
             cout<<"Match Draw."<<endl;
             break;
         }
