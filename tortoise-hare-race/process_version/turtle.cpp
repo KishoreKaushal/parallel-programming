@@ -61,7 +61,6 @@ int main(int argc, char *argv[]){
     ret = write(turtle2god_fd, &mypid, sizeof(int));
     close(turtle2god_fd);
 
-
     /*pause for the God signal to start the race.*/
     pause();
 
@@ -69,6 +68,12 @@ int main(int argc, char *argv[]){
         /*take a step*/
         my.pos += TSTEP;
         my.t += 1;
+
+        /*send mypid to hare*/
+        turtle2hare_fd = open(turtle2hare, O_WRONLY);
+        ret = write(turtle2hare_fd, &my.pos, sizeof(int));
+        close(turtle2hare_fd);
+
 
         pause();    /*recieve signal from reporter*/
 

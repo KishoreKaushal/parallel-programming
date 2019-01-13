@@ -33,6 +33,7 @@ void handle_signal(int sig){
 }
 
 int main(int argc, char *argv[]){
+    srand (time(NULL));
     cout<<"Hare is here with pid: "<<getpid()<<" parent id: "<<getppid()<<endl;
     sleep(1);
     signal(SIGUSR1, handle_signal);
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]){
     pid_t mypid=getpid();
     pid_t tpid;
     int turtle2hare_fd, hare2turtle_fd, hare2god_fd, hare2reporter_fd, god2hare_fd;
-    int ret;
+    int ret, tpos;
     proc my('H', 0, 0);
 
     /*send mypid to turtle*/
@@ -61,17 +62,39 @@ int main(int argc, char *argv[]){
     ret = write(hare2god_fd, &mypid, sizeof(int));
     close(hare2god_fd);
     
+    bool sleeping = false;
+    int sleep_time = 0;
 
     /*pause for the God signal to start the race.*/
     pause();
 
     while (true && my.pos < FINAL_POS){
-        /*take a step*/
-        my.pos += HSTEP;
+        if (sleeping) {
+            if(--sleep_time == 0) {
+                sleeping = false;
+                cout<<"Hare woke up from a long night."<<endl;
+            }
+        }
+
+        if (not sleeping) { /*take a step*/
+            my.pos += HSTEP;
+        }
         my.t += 1;
 
+        /*read turtle pid from the pipe*/
+        turtle2hare_fd = open(turtle2hare, O_RDONLY);
+        ret = read(turtle2hare_fd, &tpos, sizeof(int));
+        close(turtle2hare_fd);
 
-        /*recieve signal from reporter to write the info to reporter pipe and proceed one time step*/
+        if (not sleeping && (my.pos - tpos) >= DELTA) {
+            /*hare is going to sleep*/
+            sleep_time = rand() % MAX_SLEEP_TIME + 1;
+            sleeping = true;
+            cout<<"\nHare says, 'It's a long night, I am going to sleep for t="<<sleep_time<<"'."<<endl;
+        }
+
+        /*recieve signal from reporter to write the info to reporter pipe 
+            and proceed one time step*/
         pause();
 
         /*write to the reporter pipe*/
@@ -87,9 +110,10 @@ int main(int argc, char *argv[]){
 
         if (ret >= 0){
             my.pos = ret;
-            cout<<"Hare repositioned at "<<my.pos<<endl;
+            if (not sleeping) cout<<"Hare repositioned at "<<my.pos<<endl;
+            else cout<<"Hare sleeping and repositioned at "<<my.pos<<endl;
         }
-        
+
         kill(tpid, SIGUSR2);    /*send a signal to turtle to continue*/
     }
     return 0;

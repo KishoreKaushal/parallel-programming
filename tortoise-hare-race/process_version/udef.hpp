@@ -17,6 +17,8 @@ using namespace std;
 
 #define HSTEP (3)
 #define TSTEP (1)
+#define DELTA (10)
+#define MAX_SLEEP_TIME (20)
 
 char program[][30] = {"./god.out", "./hare.out", "./turtle.out", "./reporter.out"};
 
