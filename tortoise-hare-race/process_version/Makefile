@@ -17,4 +17,6 @@ clean:
 	rm -f /tmp/god2turtle
 	rm -f /tmp/hare2god
 	rm -f /tmp/turtle2god
+run:
+	./god.out
 
