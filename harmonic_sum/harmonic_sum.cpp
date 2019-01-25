@@ -47,7 +47,7 @@ using namespace std::literals::chrono_literals;
 
 double series_sum = 0;
 
-std::mutex g_num_mutex; 
+std::mutex critical_section; 
 
 void compute_sum(int init_num = 1, int sign = 1) {
     const double precision = pow(10, -(PRECISION+1));
@@ -59,12 +59,12 @@ void compute_sum(int init_num = 1, int sign = 1) {
         sum += delta;
     }
     
-    g_num_mutex.lock();
+    critical_section.lock();
     {
         /*critical section*/
         series_sum += 4 * sign * sum;
     }
-    g_num_mutex.unlock();
+    critical_section.unlock();
 }
 
 
