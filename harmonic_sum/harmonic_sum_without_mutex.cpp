@@ -45,11 +45,7 @@
 using namespace std;
 using namespace std::literals::chrono_literals;
 
-double series_sum = 0;
-
-std::mutex critical_section; 
-
-void compute_sum(int init_num = 1, int sign = 1) {
+void compute_sum(int init_num, int sign, double &ref) {
     const double precision = pow(10, -(PRECISION+1));
 
     double sum = 0;
@@ -59,28 +55,23 @@ void compute_sum(int init_num = 1, int sign = 1) {
         sum += delta;
     }
     
-    critical_section.lock();
-    {
-        /*critical section*/
-        series_sum += 4 * sign * sum;
-    }
-    critical_section.unlock();
+    ref = 4 * sign * sum;
 }
 
 
 int main(){
     cout.precision(PRECISION+1);
-
+    double part1=0, part2=0;
     /*Firing up the threads*/
-    thread td1(compute_sum, 1, 1);
-    thread td2(compute_sum, 3, -1);
+    thread td1(compute_sum, 1, 1, ref(part1));
+    thread td2(compute_sum, 3, -1, ref(part2));
 
 
     /*Waiting for threads*/
     td1.join();
     td2.join();
 
-    cout<<"Series Sum: "<<series_sum<<endl;
+    cout<<"Series Sum: "<<part1 + part2<<endl;
 
     return 0;
 }

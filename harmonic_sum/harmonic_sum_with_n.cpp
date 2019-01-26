@@ -40,47 +40,37 @@
 #include <mutex>
 #include <cmath>
 
-#define PRECISION (5)
+#define NUM_TERMS (1e9)
 
 using namespace std;
 using namespace std::literals::chrono_literals;
 
-double series_sum = 0;
-
-std::mutex critical_section; 
-
-void compute_sum(int init_num = 1, int sign = 1) {
-    const double precision = pow(10, -(PRECISION+1));
-
+void compute_sum(int N, int init_num, int sign, double &ref) {
     double sum = 0;
     double delta = 0;
 
-    for (int n = 1; (delta = (1.0/(4*(n-1) + init_num))) >= precision; ++n) {
+    for (int n = 1;  n <= N; ++n) {
+        (delta = (1.0/(4*(n-1) + init_num)));
         sum += delta;
     }
-    
-    critical_section.lock();
-    {
-        /*critical section*/
-        series_sum += 4 * sign * sum;
-    }
-    critical_section.unlock();
+    ref = 4 * sign * sum;
 }
 
 
 int main(){
-    cout.precision(PRECISION+1);
+    cout.precision(8);
 
+    double part1=0, part2=0;
     /*Firing up the threads*/
-    thread td1(compute_sum, 1, 1);
-    thread td2(compute_sum, 3, -1);
+    thread td1(compute_sum, int(NUM_TERMS/2), 1, 1, ref(part1));
+    thread td2(compute_sum, int((NUM_TERMS+1)/2), 3, -1, ref(part2));
 
 
     /*Waiting for threads*/
     td1.join();
     td2.join();
 
-    cout<<"Series Sum: "<<series_sum<<endl;
+    cout<<"Series Sum: "<<part1 + part2<<endl;
 
     return 0;
 }
