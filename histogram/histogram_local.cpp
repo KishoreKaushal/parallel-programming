@@ -34,6 +34,7 @@
 #include <vector>
 #include <sys/sysinfo.h>
 #include <sys/syscall.h>
+#include <sched.h>
 
 #define MAX_VAL (10000)
 
@@ -47,7 +48,10 @@ inline int generate_random_int () {
     return rand() % MAX_VAL;
 }
 
-void compute_histogram(int N, vector<long long int> &hist) {
+void compute_histogram(int thd_idx, int N, vector<long long int> &hist) {
+    printf("Thread %d in beginning was executing on core: %d\n", thd_idx, sched_getcpu());
+    cout<<endl;
+
     vector <int> hist_local(hist.size(), 0);
     int num;
     int bin_size = MAX_VAL / hist.size();
@@ -57,10 +61,13 @@ void compute_histogram(int N, vector<long long int> &hist) {
     }
 
     critical_section.lock();
-    for (int bin_idx = 0; bin_idx < hist_local.size(); ++bin_idx){
+    for (size_t bin_idx = 0; bin_idx < hist_local.size(); ++bin_idx){
         hist[bin_idx] += hist_local[bin_idx];
     }
     critical_section.unlock();
+    
+    printf("Thread %d at the end was executing on core: %d\n", thd_idx, sched_getcpu());
+    cout<<endl;
 }
 
 
@@ -94,11 +101,11 @@ int main(int argc, char *argv[]){
 
     auto start = high_resolution_clock::now();
 
-    for (int i = 0; i < thd.size(); ++i) {
-        thd[i] = thread(compute_histogram, (n+i)/4, ref(hist));
+    for (size_t i = 0; i < thd.size(); ++i) {
+        thd[i] = thread(compute_histogram, i, (n+i)/4, ref(hist));
     }
 
-    for (int i = 0; i < thd.size(); ++i) {
+    for (size_t i = 0; i < thd.size(); ++i) {
         thd[i].join();
     }
     
