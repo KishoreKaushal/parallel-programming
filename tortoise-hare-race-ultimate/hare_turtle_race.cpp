@@ -122,7 +122,7 @@ void god(){
             }
             
             if (tmp1 > 0) hare_pos = tmp1;
-            if (tmp2 > 0) hare_pos = tmp2;
+            if (tmp2 > 0) turtle_pos = tmp2;
 
             std::cout << "After repositioning at t = " << t 
                 << "\thpos = " << hare_pos 
