@@ -35,7 +35,7 @@
 #define DELTA (10)
 #define FINAL_POS (100)
 #define MAX_SLEEP_TIME (30)
-#define REPOSITIONING_PROBABILITY (0.02)
+#define REPOSITIONING_PROBABILITY (0.10)
 
 using namespace std;
 using namespace std::literals::chrono_literals;
@@ -62,7 +62,7 @@ bool hare_sleeping = false;         /* true: hare is sleeping */
 
 void hare() {
     while (not race_finished) {
-        this_thread::sleep_for(1s);
+        this_thread::sleep_for(0.5s);
         if (not hare_sleeping and not hare_ran) {
             hare_update_mutex.lock();
             hare_pos += HSTEP;
@@ -74,7 +74,7 @@ void hare() {
 
 void turtle(){
     while (not race_finished) {
-        this_thread::sleep_for(1s);
+        this_thread::sleep_for(0.5s);
         if (not turtle_ran and not turtle_ran) {
             turtle_update_mutex.lock();
             turtle_pos += TSTEP;
@@ -92,7 +92,7 @@ void god(){
     double p;
 
     while (not race_finished) {
-        this_thread::sleep_for(1s);
+        this_thread::sleep_for(0.5s);
         /*repositioning with probability*/
         p = dis(gen);
 
@@ -101,8 +101,8 @@ void god(){
             hare_update_mutex.lock();
             turtle_update_mutex.lock();
 
-            std::cout<<"*********GOD IS HERE*********"<<endl;
-            this_thread::sleep_for(1s);
+            std::cout<<"\n*********GOD IS HERE*********"<<endl;
+            this_thread::sleep_for(0.5s);
 
             std::cout << "Before repositioning at t = " << t 
                  << "\thpos = " << hare_pos 
@@ -116,7 +116,7 @@ void god(){
             if (test_mode) {
                 tmp1 = distr(gen);
                 tmp2 = distr(gen);
-                cout << "Entered value : " << tmp1 <<" "<< tmp2 << endl;
+                cout << "\nEntered value : " << tmp1 <<" "<< tmp2 << endl;
             } else {
                 cin >> tmp1 >> tmp2;
             }
@@ -129,7 +129,7 @@ void god(){
                 << "\ttpos = " << turtle_pos <<endl;
 
 
-            cout<<"****WORK OF GOD ENDS HERE****"<<endl;
+            cout<<"****WORK OF GOD ENDS HERE****\n"<<endl;
             
             reposition_mutex.unlock();
             hare_update_mutex.unlock();
@@ -141,7 +141,7 @@ void god(){
 
 void reporter(){
     while (not race_finished) {
-        this_thread::sleep_for(1s);
+        this_thread::sleep_for(0.5s);
         reposition_mutex.lock();
         hare_update_mutex.lock();
         turtle_update_mutex.lock();
@@ -153,13 +153,13 @@ void reporter(){
                  << "\ttpos = "<< turtle_pos << endl;
 
             if (hare_pos >= FINAL_POS and turtle_pos < FINAL_POS ) {
-                cout << "Hare wins the race." << endl;
+                cout << "\033[1;32mHare wins the race.\033[0m" << endl;
                 race_finished = true;
             } else if (hare_pos < FINAL_POS and turtle_pos >= FINAL_POS) {
-                cout << "Turtle wins the race." << endl;
+                cout << "\033[1;32mTurtle wins the race.\033[0m" << endl;
                 race_finished = true;
             } else if (hare_pos >= FINAL_POS and turtle_pos >= FINAL_POS) {
-                cout<<"Match Draw."<<endl;
+                cout<<"\033[1;32mMatch Draw.\033[0m"<<endl;
                 race_finished = true;
             }
 
