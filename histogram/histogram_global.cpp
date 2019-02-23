@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
     auto start = high_resolution_clock::now();
 
     for (size_t i = 0; i < thd.size(); ++i) {
-        thd[i] = thread(compute_histogram, i, (n+i)/4, ref(hist));
+        thd[i] = thread(compute_histogram, i, (n+i)/thd.size(), ref(hist));
     }
 
     for (size_t i = 0; i < thd.size(); ++i) {
