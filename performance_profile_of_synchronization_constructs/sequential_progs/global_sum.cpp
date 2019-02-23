@@ -31,28 +31,30 @@ int main(int argc, char *argv[]){
     auto gen_ld = [&] {return (dis(gen)); };
     generate (begin(arr) , end(arr),  gen_ld);
     
-
-    #ifdef TEST
-        num_elements = MAX_SIZE;
-        cout << "num_elements : " << num_elements << endl;
-    #else
-        cout << "Size of Array (max 1000000): " << endl;
+    int tot_exp;
+    
+    cout << "Enter number of Experiments: " ;
+    cin >> tot_exp;
+    
+    for (int exp_num = 0; exp_num < tot_exp; ++exp_num) {
+        cout << "Enter Sizes of Array (max "<<MAX_SIZE<<"): " << endl;
         cin >> num_elements;
-    #endif
 
-    auto start = high_resolution_clock::now();
+        global_sum = 0.0;
+        auto start = high_resolution_clock::now();
 
-    for (int i = 0; i < num_elements; ++i) {
-        global_sum += arr[i];
+        for (int i = 0; i < num_elements; ++i) {
+            global_sum += arr[i];
+        }
+        
+        auto stop = high_resolution_clock::now();
+
+        auto duration = duration_cast<microseconds>(stop - start); 
+        
+        cout.precision(3);
+        cout << fixed;
+        cout << "Time elapsed: " << (duration.count() / 1e3) << "ms" << endl;
     }
-    
-    auto stop = high_resolution_clock::now();
-
-    auto duration = duration_cast<microseconds>(stop - start); 
-    
-    cout.precision(2);
-    cout << fixed;
-    cout << "Time elapsed: " << (duration.count() / 1e3) << "ms" << endl;
     
     return 0;
 }

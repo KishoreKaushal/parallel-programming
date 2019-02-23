@@ -3,7 +3,7 @@ PROGS = $(patsubst %.cpp,%,$(SRCS))
 CXX=g++
 CXXFLAGS=-Wall -g
 LIBS=-lpthread
-DEFFLAGS=-DVERBOSE -DTEST
+DEFFLAGS=-DVERBOSE
 
 all: $(PROGS)
 

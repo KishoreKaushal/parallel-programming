@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <condition_variable>
 #include <mutex>
 #include <cmath>
 #include <vector>
@@ -20,7 +21,7 @@ int flag = 0;       /* status flag for busy-waiting*/
 int num_threads, num_elements;
 long double global_sum = 0.0;
 long double arr[MAX_SIZE];
-
+std::condition_variable cv;
 std::mutex IO;
 
 void thd_sum (int my_thd_idx, long double (&arr) [MAX_SIZE], int start_idx, int end_idx) {
@@ -40,9 +41,14 @@ void thd_sum (int my_thd_idx, long double (&arr) [MAX_SIZE], int start_idx, int 
         local_sum += arr[i];
     }
 
-    while (flag != my_thd_idx) ;    /* busy-wait loop */
-    global_sum += local_sum;
-    flag = (flag + 1) % num_threads;
+    {
+        /* using condition variable */
+        std::unique_lock<std::mutex> lk(IO);
+        cv.wait(lk, [my_thd_idx]{return flag == my_thd_idx; });
+        global_sum += local_sum;
+        flag = (flag + 1) % num_threads;
+    }
+    cv.notify_all();
 
     #ifdef VERBOSE
     {
@@ -68,7 +74,7 @@ int main(int argc, char *argv[]){
     generate (begin(arr) , end(arr),  gen_ld);
 
     #ifdef VERBOSE
-    cout << "\n==========BUSY WAIT APPROACH==============" << endl;
+    cout << "\n==========CONDITIONAL APPROACH==============" << endl;
 
     cout << "Number of cores configured: " << get_nprocs_conf() << endl
          << "Number of cores available: " << get_nprocs() << endl;
