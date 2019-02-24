@@ -17,6 +17,7 @@ void enableRawMode() {
     struct termios raw = orig_termios;
     raw.c_iflag &= ~(IXON | ICRNL);     /* Disable Ctrl-S and Ctrl-Q and Fix Ctrl-M*/
     raw.c_lflag &=  ~(ECHO | ICANON | IEXTEN | ISIG);    /* Diable Ctrl-V */
+    raw.c_oflag &= ~(OPOST);    /* Turn off all output processing */
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
@@ -30,7 +31,7 @@ int main() {
         if (iscntrl(c)) {
             printf("%d\n", c);
         } else {
-            printf("%d ('%c')\n", c, c);
+            printf("%d ('%c')\r\n", c, c);      /* manually processing the ouputs */
         }
     }
 
