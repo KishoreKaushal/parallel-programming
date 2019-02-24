@@ -49,6 +49,9 @@ inline int update_func () {
 int main() {
     using namespace std;
     srand(0);
+
+    auto gen_ld = [&] {return (rand()% INT32_MAX ); };
+    generate (begin(arr) , end(arr),  gen_ld);
     
     int tot_exp;
     
