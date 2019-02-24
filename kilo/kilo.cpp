@@ -15,9 +15,19 @@ void enableRawMode() {
     atexit(disableRawMode);
 
     struct termios raw = orig_termios;
-    raw.c_iflag &= ~(IXON | ICRNL);     /* Disable Ctrl-S and Ctrl-Q and Fix Ctrl-M*/
-    raw.c_lflag &=  ~(ECHO | ICANON | IEXTEN | ISIG);    /* Diable Ctrl-V */
-    raw.c_oflag &= ~(OPOST);    /* Turn off all output processing */
+    /* 
+        Disable Ctrl-S and Ctrl-Q and Fix Ctrl-M
+        and some miscellaneous flags which 
+        don’t really apply to modern terminal emulators
+    */
+    raw.c_iflag &= ~(BRKINT | IXON | ICRNL | INPCK | ISTRIP);     
+
+    /* Diable Ctrl-V */
+    raw.c_lflag &=  ~(ECHO | ICANON | IEXTEN | ISIG);
+
+    /* Turn off all output processing */
+    raw.c_oflag &= ~(OPOST);
+
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
