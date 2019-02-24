@@ -23,8 +23,10 @@ using namespace std::literals::chrono_literals;
 using namespace std::chrono;
 
 int num_elements;
+int num_threads;
 int arr[MAX_SIZE];
 int num_queries;
+
 
 std::mutex IO;
 std::mutex lk_num_q;
@@ -118,39 +120,26 @@ int main() {
 
     cout << "Enter number of Experiments: " ;
     cin >> tot_exp;
-    
+    cout << "Number of Threads: ";
+    cin >> num_threads;
     cout << "Enter Sizes of Array (max "<< MAX_SIZE <<"): " << endl;
     cin >> num_elements;
 
-    for (int exp_num = 0; exp_num < tot_exp; ++exp_num) {
-        int num_queries = NUM_QUERIES;
-        int op;
-        int idx;
-        int read_val;
 
+
+    for (int exp_num = 0; exp_num < tot_exp; ++exp_num) {
+        num_queries = NUM_QUERIES;
+        
+        vector <thread> thd(num_threads);
+        
         auto start = high_resolution_clock::now();
         
-        while (num_queries--) {
-            op = option();
-            switch (op)
-            {
-                case UPDATE: 
-                    idx = generate_random_idx();
-                    arr[idx] = update_func();
-                    break;
-                
-                case READ:
-                    idx = generate_random_idx();
-                    read_val = arr[idx];
-                    break;
+        for (size_t i = 0; i < thd.size(); ++i) {
+            thd[i] = thread(process_queries , i);
+        }
 
-                case SORT:
-                    sort(arr , arr+num_elements);
-                    break;
-
-                default:
-                    break;
-            }
+        for (size_t i = 0; i < thd.size(); ++i) {
+            thd[i].join();
         }
 
         auto stop = high_resolution_clock::now();
