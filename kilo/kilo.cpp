@@ -28,6 +28,8 @@ void enableRawMode() {
     /* Turn off all output processing */
     raw.c_oflag &= ~(OPOST);
 
+    /* sets the character size (CS) to 8 bits per byte */
+    raw.c_cflag |= (CS8);
 
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
