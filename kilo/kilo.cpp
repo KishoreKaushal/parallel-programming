@@ -1,6 +1,6 @@
 /*** includes ***/
 
-#ifndef _DEFAULT_SOURCE 
+#ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
 #endif
 
@@ -350,7 +350,12 @@ void editorMoveCursor(int key) {
 
     switch (key) {
         case ARROW_LEFT:
-            if (E.cx != 0) { E.cx--; }
+            if (E.cx != 0) { 
+                E.cx--; 
+            } else if (E.cy > 0) {
+                E.cy--;
+                E.cx = E.row[E.cy].size;
+            }
             break;
         case ARROW_RIGHT:
             if (row && E.cx < row->size) {
