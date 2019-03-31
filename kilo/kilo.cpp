@@ -24,6 +24,8 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#include <thread>
+#include <vector>
 
 /*** defines ***/
 
@@ -61,6 +63,9 @@ enum editorHighlight
 #define HL_HIGHLIGHT_NUMBERS (1 << 0)
 #define HL_HIGHLIGHT_STRINGS (1 << 1)
 
+/*** CONSTANTS ***/
+const uint64_t num_threads = std::thread::hardware_concurrency();
+
 /*** data ***/
 
 struct editorSyntax
@@ -82,6 +87,11 @@ struct erow {
     char *render;
     unsigned char *hl;
     int hl_open_comment;
+};
+
+struct rowParallelUpdate {
+    int start;
+    int end;
 };
 
 struct editorConfig {
@@ -454,8 +464,21 @@ int editorSyntaxToColor(int hl) {
     }
 }
 
-void editorSelectSyntaxHighlight()
-{
+void updateSyntaxJob(uint64_t myRank) {
+    int start = myRank * (E.numrows / num_threads);
+    int end;
+    if (myRank == num_threads - 1) {
+        end = E.numrows;
+    } else{
+        end = (myRank + 1) * (E.numrows / num_threads);
+    }
+
+    for (int i = start; i < end; i++){
+        editorUpdateSyntax(&E.row[i]);
+    }
+}
+
+void editorSelectSyntaxHighlight() {    
     E.syntax = NULL;
     if (E.filename == NULL)
         return;
@@ -471,11 +494,21 @@ void editorSelectSyntaxHighlight()
                 (!is_ext && strstr(E.filename, s->filematch[i])))
             {
                 E.syntax = s;
-                int filerow;
-                for (filerow = 0; filerow < E.numrows; filerow++)
-                {
-                    editorUpdateSyntax(&E.row[filerow]);
+
+                std::vector<std::thread> thds(num_threads);
+                for (size_t i = 0; i < num_threads; ++i){
+                    thds[i] = std::thread(updateSyntaxJob, i);
                 }
+
+                for (size_t i = 0; i < num_threads; ++i){
+                    thds[i].join();
+                }
+
+                // int filerow;
+                // for (filerow = 0; filerow < E.numrows; filerow++)
+                // {
+                //     editorUpdateSyntax(&E.row[filerow]);
+                // }
                 return;
             }
             i++;
@@ -664,6 +697,26 @@ char *editorRowsToString(int *buflen){
     return buf;
 }
 
+void updateRowJob(rowParallelUpdate arg){
+    for (int i = arg.start; i < arg.end; i++)
+        editorUpdateRow(&E.row[i]);
+}
+
+int getNumLines(char *filename) {
+    char command[150];
+    sprintf(command, "wc -l %s > temp.txt", filename);
+    system(command);
+
+    FILE *temp_file = fopen("temp.txt", "r");
+    int total_len;
+    char x[100];
+    fscanf(temp_file, "%d %s", &total_len, x);
+    fclose(temp_file);
+    unlink("temp.txt");
+
+    return total_len;
+}
+
 void editorOpen(char *filename) {
     free(E.filename);
     E.filename = strdup(filename);
@@ -675,11 +728,56 @@ void editorOpen(char *filename) {
     char *line = NULL;
     size_t linecap = 0;
     ssize_t linelen;
+
+    int num_lines = getNumLines(filename);
+
+    E.row = (erow*) realloc(E.row, sizeof(erow) * (num_lines));
+
+    int at = 0;
+
     while ((linelen = getline(&line, &linecap, fp)) != -1) {
         while (linelen > 0 && (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
             linelen--;
-        editorInsertRow(E.numrows, line, linelen);
+
+        E.row[at].idx = at;
+
+        E.row[at].size = linelen;
+        E.row[at].chars = (char *) malloc(linelen + 1);
+        memcpy(E.row[at].chars, line, linelen);
+        E.row[at].chars[linelen] = '\0';
+
+        E.row[at].rsize = 0;
+        E.row[at].render = NULL;
+        E.row[at].hl = NULL;
+        E.row[at].hl_open_comment = 0;
+        
+        E.numrows++;
+        E.dirty++;
+
+        at++;
+
+        // editorInsertRow(E.numrows, line, linelen);
     }
+
+    std::vector<rowParallelUpdate> args(num_threads);
+    std::vector<std::thread> thds(num_threads);
+
+    for (size_t i = 0; i < num_threads; i++)
+    {
+        if (i == num_threads - 1) {
+            args[i].start = i * (num_lines / num_threads);
+            args[i].end = num_lines;
+        } else {
+            args[i].start = i * (num_lines / num_threads);
+            args[i].end = (i + 1) * (num_lines / num_threads);
+        }
+
+        thds[i] = std::thread(updateRowJob, args[i]);
+    }
+
+    for (size_t i = 0; i < num_threads; i++)
+        thds[i].join();
+
     free(line);
     fclose(fp);
     E.dirty = 0;
