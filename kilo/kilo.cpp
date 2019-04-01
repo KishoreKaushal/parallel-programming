@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <thread>
 #include <vector>
+#include <chrono>
 
 /*** defines ***/
 
@@ -1262,6 +1263,12 @@ void initEditor() {
 }
 
 int main(int argc, char *argv[]) {
+    using namespace std;
+    using namespace std::literals::chrono_literals;
+    using namespace std::chrono;
+
+    auto start = high_resolution_clock::now();
+
     enableRawMode();
     initEditor();
 
@@ -1269,8 +1276,14 @@ int main(int argc, char *argv[]) {
         editorOpen(argv[1]);
     }
 
-    editorSetStatusMessage(
-        "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find");
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    char statusMsg[200];
+
+    snprintf(statusMsg, 200, "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find | Time: %d ms", (int)(duration.count() / 1e3));
+
+    editorSetStatusMessage(statusMsg);
 
     while (1) {
         editorRefreshScreen();
